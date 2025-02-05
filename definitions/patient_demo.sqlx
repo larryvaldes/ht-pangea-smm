@@ -1,0 +1,8 @@
+config {
+    type: "table"
+}
+
+SELECT p.person_source_value, p.year_of_birth, p.month_of_birth, p.day_of_birth, p.gender_source_value as gender,
+p.race_source_value as race, p.ethnicity_source_value as ethnicity
+ FROM ${ref("all_smm_patients")} b LEFT JOIN `healthtree-production.dataform.person` p 
+ ON b.person_source_value = p.person_source_value

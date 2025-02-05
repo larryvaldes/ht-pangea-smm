@@ -1,0 +1,18 @@
+config {
+    type: "view"
+}
+
+SELECT
+  DISTINCT
+  person_source_value,
+  ARRAY_AGG(condition_source_value) AS condition_source_value,
+  ARRAY_AGG(COALESCE(condition_start_DATE, "")) AS condition_start_DATEe,
+  ARRAY_AGG(COALESCE(visit_occurrence_reference,"")) AS visit_ref
+FROM
+  `healthtree-production.dataform.condition_occurrence`
+WHERE
+  LOWER(condition_source_value) LIKE "%smm%"
+  OR LOWER(condition_source_value) LIKE "%smoldering%"
+  or condition_source_concept_id in ("D47.2", "413587002")
+GROUP BY
+  person_source_value

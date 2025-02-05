@@ -1,0 +1,64 @@
+config {
+    type: "view"
+}
+
+SELECT code, lab
+FROM UNNEST([
+  STRUCT('33358-3' AS code, 'mspike' AS lab),
+  STRUCT('48378-4', 'iuratio'),
+  STRUCT('40844-3', 'iuratio'),
+  STRUCT('80517-6', 'iuratio'),
+  STRUCT('36916-5', 'kappa'),
+  STRUCT('80515-0', 'kappa'),
+  STRUCT('33944-0', 'lambda'),
+  STRUCT('80516-8', 'lambda'),
+  STRUCT('11118-7', 'plasmacells'),
+  STRUCT('2160-0', 'creatinine'),
+STRUCT('2161-8', 'creatinine'),
+STRUCT('38483-4', 'creatinine'),
+STRUCT('14682-9', 'creatinine'),
+STRUCT('77140-2', 'creatinine'),
+STRUCT('35203-9', 'creatinine'),
+
+STRUCT('718-7', 'hgb'),
+STRUCT('20509-6', 'hgb'),
+STRUCT('30350-3', 'hgb'),
+STRUCT('59260-0', 'hgb'),
+STRUCT('93846-4', 'hgb'),
+
+STRUCT('49297-5', 'inmunofix2'),
+
+STRUCT('17861-6', 'calcium'),
+STRUCT('49765-1', 'calcium'),
+STRUCT('2000-8', 'calcium'),
+STRUCT('35246-8', 'calcium'),
+STRUCT('46099-8', 'calcium'),
+STRUCT('34907-6', 'calcium'),
+STRUCT('29265-6', 'calcium'),
+
+  STRUCT('2164-2', 'creatinine_clearance'),
+  STRUCT('35591-7', 'creatinine_clearance'),
+  STRUCT('33558-8', 'creatinine_clearance'),
+  STRUCT('35592-5', 'creatinine_clearance'),
+  STRUCT('48643-1', 'creatinine_clearance'),
+  STRUCT('48642-3', 'creatinine_clearance'),
+  STRUCT('69405-9', 'creatinine_clearance'),
+  STRUCT('33914-3', 'creatinine_clearance'),
+  STRUCT('98979-8', 'creatinine_clearance'),
+  STRUCT('62238-1', 'creatinine_clearance'),
+  STRUCT('77147-7', 'creatinine_clearance'),
+  STRUCT('88294-4', 'creatinine_clearance'),
+  STRUCT('88293-6', 'creatinine_clearance'),
+  STRUCT('45066-8', 'creatinine_clearance'),
+  STRUCT('50384-7', 'creatinine_clearance'),
+  STRUCT('50210-4', 'creatinine_clearance'),
+  STRUCT('97952-6', 'creatinine_clearance'),
+  STRUCT('50044-7', 'creatinine_clearance'),
+  STRUCT('98980-6', 'creatinine_clearance'),
+
+  STRUCT('49297-5', 'inmunofix2'),
+  STRUCT('49297-5', 'inmunofix2'),
+  STRUCT('49297-5', 'inmunofix2')
+
+
+])

@@ -1,0 +1,42 @@
+config {
+    type: "view"
+}
+
+WITH base as(
+SELECT * from `healthtree-production.dataform.measurement` 
+WHERE
+measurement_source_code in (SELECT code from ${ref("lab_codes")})
+AND
+person_source_value in (SELECT person_source_value FROM ${ref("all_smm_patients")})
+ORDER BY measurement_DATE asc
+),
+
+
+date_separation as(
+SELECT SAFE_CAST(measurement_DATE AS TIMESTAMP) AS timest,
+SAFE_CAST(measurement_DATE AS STRING) AS str, * from base),
+
+final as(
+SELECT CASE WHEN (timest is null and str is not null) THEN
+PARSE_TIMESTAMP('%a %b %d %Y %H:%M:%S GMT%z',
+  SPLIT(str, " (")[SAFE_OFFSET(0)])
+  WHEN(timest is not null) THEN timest
+END AS measurement_DATE, * EXCEPT(timest, str, measurement_DATE)
+ FROM date_separation
+ ORDER BY measurement_DATE ASC
+)
+
+SELECT person_source_value, measurement_DATE, record_source_id, visit_occurrence_reference, measurement_source_code,
+measurement_source_value, value_as_number from final 
+ORDER BY person_source_value, measurement_DATE
+
+/*
+SELECT visit_occurrence_reference, ARRAY_AGG(COALESCE(measurement_source_value, "")),
+ARRAY_AGG(measurement_source_code), ARRAY_AGG(COALESCE(value_as_number, "")),
+ARRAY_AGG(COALESCE(measurement_DATE, CURRENT_TIMESTAMP())),
+ARRAY_AGG(record_source_id), ARRAY_AGG(person_source_value)
+from final
+group by visit_occurrence_reference
+*/
+
+

@@ -1,0 +1,60 @@
+config {
+    type: "table"
+}
+with base as(
+SELECT
+  DISTINCT
+  co.person_source_value,
+  co.condition_source_value,
+  co.condition_source_concept_id as condition_source_code,
+  co.condition_start_DATE,
+  co.condition_end_DATE,
+  co.visit_occurrence_reference,
+  co.record_source_id
+FROM
+  ${ref("all_smm_patients")} patients LEFT JOIN
+  `healthtree-production.dataform.condition_occurrence` co
+  ON
+  patients.person_source_value = co.person_source_value
+WHERE
+  LOWER(co.condition_source_value) LIKE "%smm%"
+  OR LOWER(co.condition_source_value) LIKE "%smoldering%"
+  OR LOWER(co.condition_source_value) LIKE "%myeloma%"
+  --TO DO
+  --CHANGE THE NAME OF THE FIELD FROM ...concept_id to ...code
+  OR co.condition_source_concept_id like "D47.2"
+  OR co.condition_source_concept_id like "C90.00"
+  OR co.condition_source_concept_id like "109989006"
+  OR co.condition_source_concept_id like "413587002"
+
+  ORDER BY co.person_source_value, co.condition_start_DATE
+),
+
+all_timestamp as(
+SELECT
+CASE
+WHEN SAFE_CAST(condition_start_DATE AS TIMESTAMP) IS NOT NULL
+ THEN SAFE_CAST(condition_start_DATE AS TIMESTAMP)
+
+WHEN SAFE_CAST(condition_start_DATE AS STRING) LIKE "____" THEN TIMESTAMP(CONCAT(
+  SAFE_CAST(condition_start_DATE AS STRING), "-01-01"
+))
+WHEN SAFE_CAST(condition_start_DATE AS STRING) LIKE "____-__" THEN TIMESTAMP(CONCAT(
+  SAFE_CAST(condition_start_DATE AS STRING), "-01"
+)) END AS timestart,
+CASE
+WHEN SAFE_CAST(condition_end_DATE AS TIMESTAMP) IS NOT NULL
+ THEN SAFE_CAST(condition_end_DATE AS TIMESTAMP)
+
+WHEN SAFE_CAST(condition_end_DATE AS STRING) LIKE "____" THEN TIMESTAMP(CONCAT(
+  SAFE_CAST(condition_end_DATE AS STRING), "-01-01"
+))
+WHEN SAFE_CAST(condition_end_DATE AS STRING) LIKE "____-__" THEN TIMESTAMP(CONCAT(
+  SAFE_CAST(condition_end_DATE AS STRING), "-01"
+)) END AS timeend,
+
+ * from base)
+
+SELECT timestart as condition_start_DATE,
+timeend as condition_end_DATE,
+ * EXCEPT(condition_start_DATE, timestart, condition_end_DATE, timeend),  FROM all_timestamp

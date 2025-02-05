@@ -1,0 +1,1 @@
+SELECT record_source_id, visit_start_DATE, visit_end_DATE from ${ref("visit")}
