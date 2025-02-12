@@ -1,0 +1,38 @@
+config {
+    type: "view"
+}
+with base as(
+--SELECT * FROM 
+--${ref("encounter_lab")}
+--UNION ALL
+SELECT * FROM
+${ref("no_encounter_lab")}
+),
+
+iuratio_calculation as(
+    SELECT * EXCEPT(iuratio, kappa, lambda),
+    CASE WHEN (iuratio <> "NA") THEN iuratio
+    WHEN (iuratio = "NA" AND lambda <> "NA" AND kappa <> "NA") THEN
+    FORMAT("%.2f",
+        GREATEST(SAFE_CAST(kappa AS FLOAT64), SAFE_CAST(lambda AS FLOAT64))/
+        LEAST(SAFE_CAST(kappa AS FLOAT64), SAFE_CAST(lambda as FLOAT64)))
+    ELSE "NA" END
+     AS iuratio
+     FROM base ORDER BY person_source_value, measurement_DATE
+),
+
+slim_crab as (
+    SELECT *,
+    CASE WHEN(plasmacells <> "NA" AND SAFE_CAST(plasmacells AS FLOAT64) > 60) OR
+    (iuratio <> "NA" AND (SAFE_CAST(iuratio AS FLOAT64) > 100 OR SAFE_CAST(iuratio AS FLOAT64) < 0.01)) OR
+    (calcium <> "NA" AND SAFE_CAST(calcium AS FLOAT64) > 11) OR
+    (creatinine <> "NA" AND SAFE_CAST(creatinine AS FLOAT64) > 2) OR
+    (creatinine_clearance <> "NA" AND SAFE_CAST(creatinine_clearance AS FLOAT64) < 40) OR
+    (hgb <> "NA" AND SAFE_CAST(hgb AS FLOAT64) < 10) THEN 1
+    ELSE 0 END AS prog_mm
+    FROM iuratio_calculation
+    ORDER BY person_source_value,measurement_DATE
+)
+
+SELECT * FROM slim_crab
+ ORDER BY person_source_value, measurement_DATE

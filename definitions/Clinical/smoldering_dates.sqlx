@@ -1,0 +1,34 @@
+config {
+    type: "view"
+}
+
+WITH smm_last AS(
+   SELECT d.person_source_value,
+   MAX(d.condition_start_DATE) AS smm_last_DATE,
+   FROM ${ref("diagnostic")} d 
+   LEFT JOIN ${ref("diagnostic_mapping")} dm
+   ON d.condition_source_code = dm.condition_source_code
+   WHERE dm.diagnostic = "SMM"
+   GROUP BY d.person_source_value
+),
+
+mm_after_smm AS(
+   SELECT u.person_source_value,
+   MIN(d.condition_start_DATE) as mm_DATE
+   FROM ${ref("all_smm_patients")} u LEFT JOIN ${ref("diagnostic")} d
+   ON u.person_source_value = d.person_source_value
+   LEFT JOIN
+   ${ref("diagnostic_mapping")} dm ON
+   d.condition_source_code = dm.condition_source_code LEFT JOIN
+   smm_last ON u.person_source_value = smm_last.person_source_value
+   WHERE dm.diagnostic = "MM" AND
+   d.condition_start_DATE > smm_last.smm_last_DATE
+   GROUP BY u.person_source_value
+)
+
+
+SELECT smm_last.person_source_value,
+smm_last.smm_last_DATE,
+mm_after_smm.mm_DATE
+ FROM smm_last LEFT JOIN mm_after_smm ON
+smm_last.person_source_value = mm_after_smm.person_source_value

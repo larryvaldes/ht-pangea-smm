@@ -1,0 +1,12 @@
+config {
+    type: "table"
+}
+
+SELECT person_source_value FROM ${ref("all_smm_patients")}
+WHERE person_source_value IN (
+    SELECT distinct person_source_value FROM ${ref("diagnostic")} d LEFT JOIN
+    ${ref("diagnostic_mapping")} dm ON
+    d.condition_source_code = dm.condition_source_code
+    WHERE
+    dm.diagnostic = "SMM"
+)

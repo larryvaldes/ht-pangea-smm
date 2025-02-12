@@ -1,0 +1,71 @@
+config {
+    type: "table"
+}
+
+with base as (
+SELECT * 
+FROM ${ref("lab_filtering")}
+--WHERE visit_occurrence_reference IS NULL
+ORDER BY person_source_value, measurement_DATE
+),
+
+ranked_data AS (
+  SELECT *,
+    TIMESTAMP_TRUNC(measurement_DATE, DAY) AS event_date,
+    LAG(TIMESTAMP_TRUNC(measurement_DATE, DAY)) OVER (ORDER BY person_source_value, measurement_DATE) AS prev_date,
+    LAG(person_source_value) OVER (ORDER BY person_source_value, measurement_DATE) AS prev_person
+  FROM base
+  ORDER BY person_source_value, measurement_DATE
+),
+grouped_data AS (
+  SELECT 
+    *,
+    SUM(CASE 
+          WHEN prev_date IS NULL OR DATE_DIFF(event_date, prev_date, DAY) > 2 OR 
+          prev_person <> person_source_value
+          THEN 1 
+          ELSE 0 
+        END) OVER (ORDER BY person_source_value, measurement_DATE) AS group_id
+  FROM ranked_data
+  ORDER BY person_source_value, measurement_DATE
+),
+pivoted_data AS(
+
+SELECT MIN(person_source_value) as person_source_value,
+MIN(measurement_DATE) as measurement_DATE,
+COALESCE(MAX(CASE WHEN measurement_category = 'mspike' THEN value_as_number END), 'NA') as mspike,
+COALESCE(MAX(CASE WHEN measurement_category = 'iuratio' THEN value_as_number END), 'NA') as iuratio,
+COALESCE(MAX(CASE WHEN measurement_category = 'kappa' THEN value_as_number END), 'NA') as kappa,
+COALESCE(MAX(CASE WHEN measurement_category = 'lambda' THEN value_as_number END), 'NA') as lambda,
+COALESCE(MAX(CASE WHEN measurement_category = 'plasmacells' THEN value_as_number END), 'NA') as plasmacells,
+COALESCE(MAX(CASE WHEN measurement_category = 'creatinine' THEN value_as_number END), 'NA') as creatinine,
+COALESCE(MAX(CASE WHEN measurement_category = 'hgb' THEN value_as_number END), 'NA') as hgb,
+COALESCE(MAX(CASE WHEN measurement_category = 'inmunofix2' THEN value_as_number END), 'NA') as inmunofix2,
+COALESCE(MAX(CASE WHEN measurement_category = 'calcium' THEN value_as_number END), 'NA') as calcium,
+COALESCE(MAX(CASE WHEN measurement_category = 'creatinine_clearance' THEN value_as_number END), 'NA') as creatinine_clearance
+
+FROM grouped_data
+GROUP BY group_id
+ORDER BY person_source_value, measurement_DATE
+)
+
+SELECT *, "no_encounter" AS procedence FROM pivoted_data
+/*
+WHERE (mspike = "NA" OR SAFE_CAST(mspike AS FLOAT64) IS NOT NULL)
+AND
+(iuratio = "NA" OR SAFE_CAST(iuratio AS FLOAT64) IS NOT NULL)
+AND
+(kappa = "NA" OR SAFE_CAST(kappa AS FLOAT64) IS NOT NULL)
+AND
+(lambda = "NA" OR SAFE_CAST(lambda AS FLOAT64) IS NOT NULL)
+AND
+(plasmacells = "NA" OR SAFE_CAST(plasmacells AS FLOAT64) IS NOT NULL)
+AND
+(creatinine = "NA" OR SAFE_CAST(creatinine AS FLOAT64) IS NOT NULL)
+AND
+(hgb = "NA" OR SAFE_CAST(hgb AS FLOAT64) IS NOT NULL)
+AND
+(calcium = "NA" OR SAFE_CAST(calcium AS FLOAT64) IS NOT NULL)
+AND
+(creatinine_clearance = "NA" OR SAFE_CAST(creatinine_clearance AS FLOAT64) IS NOT NULL)
+*/

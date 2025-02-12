@@ -1,0 +1,23 @@
+config {
+    type: "table"
+}
+with base as(
+SELECT p.person_source_value, p.year_of_birth, p.month_of_birth, p.day_of_birth, 
+CASE WHEN p.gender_source_value like "male" THEN "Male"
+WHEN p.gender_source_value like "female" THEN "Female" END AS sex,
+CASE WHEN p.race_source_value like "White" THEN "White"
+WHEN p.race_source_value like "Black or African American" THEN "Black or African American"
+WHEN p.race_source_value like "Asian" THEN "Asian"
+WHEN p.race_source_value like "Patient Refused" THEN "Declined"
+WHEN p.race_source_value like "Hispanic" THEN "Other"
+ELSE "NA" END AS race,
+CASE WHEN p.ethnicity_source_value like "Hispanic or Latino" THEN "Hispanic or Latino"
+WHEN p.ethnicity_source_value like "Not Hispanic or Latino" THEN "Not Hispanic or Latino"
+ELSE "NA" END AS ethnicity
+FROM ${ref("all_smm_patients")} b LEFT JOIN `healthtree-production.dataform.person` p 
+ON b.person_source_value = p.person_source_value
+)
+
+SELECT * EXCEPT(year_of_birth, month_of_birth, day_of_birth),
+TIMESTAMP(DATE(year_of_birth, month_of_birth, day_of_birth)) AS birthDATE
+ FROM base

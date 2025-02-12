@@ -1,0 +1,40 @@
+config {
+    type: "table"
+}
+
+with base as(
+SELECT lg.*, TIMESTAMP_DIFF(lg.measurement_DATE, mld.min_labDATE, SECOND)/
+(60 * 60 * 24 * 365.25) AS tstart,
+LEAD(TIMESTAMP_DIFF(lg.measurement_DATE, mld.min_labDATE, SECOND) / (60 * 60 * 24 * 365.25)) 
+    OVER (PARTITION BY lg.person_source_value ORDER BY lg.measurement_DATE) AS tstop,
+pd.* EXCEPT(person_source_value),
+sd.* EXCEPT(person_source_value),
+mld.* EXCEPT(person_source_value),
+er.end_date_type,
+TIMESTAMP_DIFF(lg.measurement_DATE, pd.birthDATE, SECOND) / (60 * 60 * 24 * 365.25) AS age
+ FROM ${ref("all_lab_groups")} lg LEFT JOIN ${ref("patient_demographic")} pd ON
+lg.person_source_value = pd.person_source_value
+LEFT JOIN ${ref("end_reason")} er ON
+lg.person_source_value = er.person_source_value
+LEFT JOIN ${ref("min_lab_date")} mld ON
+lg.person_source_value = mld.person_source_value
+LEFT JOIN ${ref("smoldering_dates")} sd ON
+lg.person_source_value = sd.person_source_value
+ORDER BY lg.person_source_value, lg.measurement_DATE
+),
+
+tstop_and_identifiers as (
+SELECT ROW_NUMBER() OVER (ORDER BY person_source_value, tstart) AS V1,
+DENSE_RANK() OVER (ORDER BY person_source_value) as participant_id,
+* EXCEPT(tstop), CASE WHEN tstop IS NULL AND mm_DATE IS NOT NULL
+THEN (TIMESTAMP_DIFF(mm_DATE, min_labDATE, SECOND) / (60 * 60 * 24 * 365.25))+ 0.002
+WHEN tstop IS NULL THEN (tstart + 0.002)
+WHEN tstop = tstart THEN (tstop + 0.002)
+ELSE tstop
+END as tstop
+FROM base
+ORDER BY person_source_value, tstart)
+
+SELECT V1, participant_id, tstart, tstop, prog_mm, mspike, iuratio, plasmacells, age,
+creatinine, hgb, "SMM" AS current_diagnosis, end_date_type, race, ethnicity,
+inmunofix2 AS immunofix2, sex FROM tstop_and_identifiers

@@ -1,0 +1,25 @@
+config {
+    type: "table"
+}
+
+with base as (
+SELECT MIN(person_source_value) as person_source_value,
+MIN(measurement_DATE) as measurement_DATE,
+COALESCE(MAX(CASE WHEN measurement_category = 'mspike' THEN value_as_number END), 'NA') as mspike,
+COALESCE(MAX(CASE WHEN measurement_category = 'iuratio' THEN value_as_number END), 'NA') as iuratio,
+COALESCE(MAX(CASE WHEN measurement_category = 'kappa' THEN value_as_number END), 'NA') as kappa,
+COALESCE(MAX(CASE WHEN measurement_category = 'lambda' THEN value_as_number END), 'NA') as lambda,
+COALESCE(MAX(CASE WHEN measurement_category = 'plasmacells' THEN value_as_number END), 'NA') as plasmacells,
+COALESCE(MAX(CASE WHEN measurement_category = 'creatinine' THEN value_as_number END), 'NA') as creatinine,
+COALESCE(MAX(CASE WHEN measurement_category = 'hgb' THEN value_as_number END), 'NA') as hgb,
+COALESCE(MAX(CASE WHEN measurement_category = 'inmunofix2' THEN value_as_number END), 'NA') as inmunofix2,
+COALESCE(MAX(CASE WHEN measurement_category = 'calcium' THEN value_as_number END), 'NA') as calcium,
+COALESCE(MAX(CASE WHEN measurement_category = 'creatinine_clearance' THEN value_as_number END), 'NA') as creatinine_clearance
+
+FROM ${ref("lab_filtering")}
+WHERE visit_occurrence_reference IS NOT NULL
+GROUP BY visit_occurrence_reference
+)
+
+SELECT *, "encounter" AS procedence FROM base 
+ORDER BY person_source_value, measurement_DATE
