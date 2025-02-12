@@ -1,0 +1,11 @@
+config {
+    type: "view"
+}
+
+SELECT person_source_value, mm_DATE, passedAway, passedAwayDate,
+CASE WHEN passedAway THEN "Death"
+WHEN mm_DATE IS NULL THEN "Last appointment"
+WHEN mm_DATE IS NOT NULL THEN "Diagnostic" END AS end_date_type
+ FROM ${ref("smoldering_dates")} sd LEFT JOIN `healthtree-production.HT.users` u ON
+ sd.person_source_value = u.userId
+ 

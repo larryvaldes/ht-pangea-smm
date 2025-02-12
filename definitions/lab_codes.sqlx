@@ -2,9 +2,9 @@ config {
     type: "view"
 }
 
-SELECT code, lab
+SELECT code, col_name
 FROM UNNEST([
-  STRUCT('33358-3' AS code, 'mspike' AS lab),
+  STRUCT('33358-3' AS code, 'mspike' AS col_name),
   STRUCT('48378-4', 'iuratio'),
   STRUCT('40844-3', 'iuratio'),
   STRUCT('80517-6', 'iuratio'),
@@ -54,11 +54,7 @@ STRUCT('29265-6', 'calcium'),
   STRUCT('50210-4', 'creatinine_clearance'),
   STRUCT('97952-6', 'creatinine_clearance'),
   STRUCT('50044-7', 'creatinine_clearance'),
-  STRUCT('98980-6', 'creatinine_clearance'),
-
-  STRUCT('49297-5', 'inmunofix2'),
-  STRUCT('49297-5', 'inmunofix2'),
-  STRUCT('49297-5', 'inmunofix2')
+  STRUCT('98980-6', 'creatinine_clearance')
 
 
 ])

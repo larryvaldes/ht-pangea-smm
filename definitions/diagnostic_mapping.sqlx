@@ -1,0 +1,22 @@
+config {
+    type: "view"
+}
+
+SELECT condition_source_code, diagnostic
+FROM UNNEST([
+  STRUCT("413587002" AS condition_source_code, "SMM" AS diagnostic),
+  STRUCT("273.1", "SMM"),
+  STRUCT("D47.2", "SMM"),
+
+  STRUCT("C90.00", "MM"),
+  STRUCT("C90", "MM"),
+  STRUCT("C90.0", "MM"),
+  STRUCT("C90.01", "MM"),
+  STRUCT("C90.02", "MM"),
+  STRUCT("109989006", "MM"),
+  STRUCT("203.00", "MM"),
+  STRUCT("203.01", "MM"),
+  STRUCT("203.02", "MM"),
+  STRUCT("94704006", "MM")
+])
+  

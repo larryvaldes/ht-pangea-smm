@@ -1,0 +1,15 @@
+config {
+    type: "view"
+}
+with base as(
+SELECT l.person_source_value, * EXCEPT(person_source_value)
+ FROM ${ref("lab")} l LEFT JOIN ${ref("smoldering_dates")} sd ON
+l.person_source_value = sd.person_source_value
+WHERE
+measurement_DATE <= COALESCE(mm_DATE, CURRENT_TIMESTAMP())
+AND
+(value_as_number = "NA" OR SAFE_CAST(value_as_number AS FLOAT64) IS NOT NULL)
+ORDER BY l.person_source_value, measurement_DATE
+)
+
+SELECT * FROM base

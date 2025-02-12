@@ -1,0 +1,7 @@
+WITH nodate_visit AS(
+
+SELECT * FROM ${ref("visit")} WHERE visit_start_DATE IS NULL
+)
+
+SELECT * FROM ${ref("lab")}
+WHERE visit_occurrence_reference IN (SELECT distinct record_source_id FROM nodate_visit)

@@ -1,0 +1,10 @@
+config {
+    type: "view"
+}
+
+SELECT person_source_value, MIN(measurement_DATE) as min_labDATE
+ FROM ${ref("lab_filtering")}
+WHERE
+measurement_DATE <= COALESCE(mm_DATE, CURRENT_TIMESTAMP())
+GROUP BY person_source_value
+ORDER BY min_labDATE

@@ -1,0 +1,1 @@
+SELECT * FROM ${ref("lab")} where person_source_value like "10244"

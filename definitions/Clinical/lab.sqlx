@@ -1,5 +1,5 @@
 config {
-    type: "view"
+    type: "table"
 }
 
 WITH base as(
@@ -26,17 +26,13 @@ END AS measurement_DATE, * EXCEPT(timest, str, measurement_DATE)
  ORDER BY measurement_DATE ASC
 )
 
-SELECT person_source_value, measurement_DATE, record_source_id, visit_occurrence_reference, measurement_source_code,
-measurement_source_value, value_as_number from final 
+SELECT person_source_value, measurement_DATE, record_source_id, visit_occurrence_reference,
+measurement_source_code, lc.col_name as measurement_category,
+measurement_source_value, value_as_number FROM final 
+INNER JOIN ${ref("lab_codes")} lc ON
+final.measurement_source_code = lc.code
+WHERE measurement_DATE IS NOT NULL AND
+measurement_DATE > TIMESTAMP('1925-01-01 00:00:00')
 ORDER BY person_source_value, measurement_DATE
-
-/*
-SELECT visit_occurrence_reference, ARRAY_AGG(COALESCE(measurement_source_value, "")),
-ARRAY_AGG(measurement_source_code), ARRAY_AGG(COALESCE(value_as_number, "")),
-ARRAY_AGG(COALESCE(measurement_DATE, CURRENT_TIMESTAMP())),
-ARRAY_AGG(record_source_id), ARRAY_AGG(person_source_value)
-from final
-group by visit_occurrence_reference
-*/
 
 

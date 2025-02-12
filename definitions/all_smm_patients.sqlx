@@ -4,15 +4,18 @@ config {
 
 SELECT
   DISTINCT
-  person_source_value,
-  ARRAY_AGG(condition_source_value) AS condition_source_value,
-  ARRAY_AGG(COALESCE(condition_start_DATE, "")) AS condition_start_DATEe,
-  ARRAY_AGG(COALESCE(visit_occurrence_reference,"")) AS visit_ref
+  person_source_value
 FROM
   `healthtree-production.dataform.condition_occurrence`
 WHERE
-  LOWER(condition_source_value) LIKE "%smm%"
-  OR LOWER(condition_source_value) LIKE "%smoldering%"
-  or condition_source_concept_id in ("D47.2", "413587002")
+  (condition_source_concept_id in ("413587002", "273.1")
+  OR (condition_source_concept_id like "D47.2" AND (LOWER(condition_source_value) like "%smoldering%"
+  OR LOWER(condition_source_value) like "%smm%")))
+  AND person_source_value NOT IN
+  (
+    SELECT userId FROM `healthtree-production.HT.users` WHERE (email LIKE '%healthtree.org%' AND email NOT LIKE "jenny@healthtree.org")
+    OR email LIKE '%deleted.com%'
+  )
+  AND (condition_start_DATE IS NOT NULL OR condition_end_DATE IS NOT NULL)
 GROUP BY
   person_source_value

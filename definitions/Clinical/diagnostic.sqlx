@@ -7,8 +7,8 @@ SELECT
   co.person_source_value,
   co.condition_source_value,
   co.condition_source_concept_id as condition_source_code,
-  co.condition_start_DATE,
-  co.condition_end_DATE,
+  COALESCE(co.condition_start_DATE, co.condition_end_DATE) as condition_start_DATE,
+  COALESCE(co.condition_end_DATE, co.condition_start_DATE) as condition_end_DATE,
   co.visit_occurrence_reference,
   co.record_source_id
 FROM
@@ -17,18 +17,25 @@ FROM
   ON
   patients.person_source_value = co.person_source_value
 WHERE
-  LOWER(co.condition_source_value) LIKE "%smm%"
-  OR LOWER(co.condition_source_value) LIKE "%smoldering%"
-  OR LOWER(co.condition_source_value) LIKE "%myeloma%"
   --TO DO
   --CHANGE THE NAME OF THE FIELD FROM ...concept_id to ...code
-  OR co.condition_source_concept_id like "D47.2"
-  OR co.condition_source_concept_id like "C90.00"
-  OR co.condition_source_concept_id like "109989006"
-  OR co.condition_source_concept_id like "413587002"
+  co.condition_source_concept_id IN
+  ("413587002", "273.1")
+  OR co.condition_source_concept_id IN
+  ("C90.00", "C90", "C90.0", "C90.01", "C90.02",
+  "109989006", "203.00", "203.01", "203.02", "94704006")
+  OR (co.condition_source_concept_id LIKE "D47.2" AND(
+    LOWER(co.condition_source_value) LIKE "%smm%" OR
+    LOWER(co.condition_source_value) LIKE "%smoldering%"
+  ))
 
-  ORDER BY co.person_source_value, co.condition_start_DATE
+  ORDER BY co.person_source_value, condition_start_DATE
 ),
+
+-- 285420006 (IgA)
+-- 285421005 (IgG)
+-- 313427003 (Lambda LCM)
+-- 414553000 (Kappa LCM)
 
 all_timestamp as(
 SELECT
@@ -55,6 +62,10 @@ WHEN SAFE_CAST(condition_end_DATE AS STRING) LIKE "____-__" THEN TIMESTAMP(CONCA
 
  * from base)
 
+
 SELECT timestart as condition_start_DATE,
 timeend as condition_end_DATE,
  * EXCEPT(condition_start_DATE, timestart, condition_end_DATE, timeend),  FROM all_timestamp
+ WHERE timestart IS NOT NULL
+ ORDER BY condition_start_DATE
+ 

@@ -1,0 +1,3 @@
+
+SELECT * FROM ${ref("visit")}
+WHERE record_source_id like "413587002"

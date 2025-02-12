@@ -1,0 +1,5 @@
+SELECT * FROM ${ref("diagnostic")} d LEFT JOIN ${ref("diagnostic_mapping")} dm ON
+d.condition_source_code = dm.condition_source_code
+WHERE person_source_value like "10244"
+
+ORDER BY d.person_source_value, d.condition_start_DATE
